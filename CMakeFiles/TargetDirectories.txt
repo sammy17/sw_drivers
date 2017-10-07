@@ -1,0 +1,3 @@
+/home/debian/sw_drivers/CMakeFiles/rebuild_cache.dir
+/home/debian/sw_drivers/CMakeFiles/node.dir
+/home/debian/sw_drivers/CMakeFiles/edit_cache.dir
