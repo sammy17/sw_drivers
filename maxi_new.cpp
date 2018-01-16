@@ -150,7 +150,6 @@ int main(int argc, char *argv[]) {
     auto begin2 = std::chrono::high_resolution_clock::now();
     if(!img.data) break;
         cv::cvtColor(img, grey, CV_BGR2GRAY);
-        memcpy(rgb_src,img.data,76800*3);
         memcpy(src,grey.data,76800);
         //auto begin2 = std::chrono::high_resolution_clock::now();
 
@@ -170,6 +169,7 @@ int main(int argc, char *argv[]) {
             int det =0;
              
 
+        auto end3 = std::chrono::high_resolution_clock::now();
         Frame frame;
         frame.frameNo = frameNo;
         frame.cameraID = cameraID;
