@@ -6,7 +6,9 @@
 #include <fstream>
 #include <iostream>
 
+// #include "detection/MyTypes.h"
 #include "detection/ClientUDP.h"
+// #include "detection/MyTypes.h"
 #include "detection/BGSDetector.h"
 #include <csignal>
 
@@ -20,6 +22,8 @@
 #define AXILITES_BASEADDR 0x43C00000
 #define CRTL_BUS_BASEADDR 0x43C10000
 #define AXILITE_RANGE     0x0000FFFF
+
+
 
 using namespace cv;
 using namespace std;
@@ -36,8 +40,9 @@ int type;
 // uint8_t * ybuffer = new uint8_t[N];
 
 uint8_t * src; 
-uint8_t * rgb_src; 
 uint8_t * dst; 
+
+
 
 
 int backsub_init(XBgsub * backsub_ptr){
@@ -75,10 +80,11 @@ void signalHandler( int signum ) {
 
     //Release IP Core
     backsub_rel(&backsub);
-
+   
     munmap((void*)src, DDR_RANGE);
     munmap((void*)dst, DDR_RANGE);
-    munmap((void*)rgb_src, DDR_RANGE);
+
+
     close(fdIP);
 
     exit(signum);
@@ -91,8 +97,6 @@ int main(int argc, char *argv[]) {
     // Initialization communication link
     boost::asio::io_service io_service;
     ClientUDP client(io_service,"10.10.21.49",8080);
-
-
     uint16_t frameNo=0;
     const uint8_t cameraID = 0;
 
@@ -111,13 +115,17 @@ int main(int argc, char *argv[]) {
    // cap.set(CV_CAP_PROP_AUTOFOCUS, 0);
 
     src = (uint8_t*)mmap(NULL, DDR_RANGE,PROT_READ|PROT_WRITE, MAP_SHARED, fdIP, TX_BASE_ADDR); 
-    rgb_src = (uint8_t*)mmap(NULL, DDR_RANGE,PROT_READ|PROT_WRITE, MAP_SHARED, fdIP, RGB_TX_BASE_ADDR); 
     dst = (uint8_t*)mmap(NULL, DDR_RANGE,PROT_EXEC|PROT_READ|PROT_WRITE, MAP_SHARED, fdIP, RX_BASE_ADDR);
 
+
+    printf("init begin\n");
 
     if(backsub_init(&backsub)==0) {
         printf("Backsub IP Core Initialized!\n");
     }
+
+    // Initializing IP Core Ends here .........................
+
     
     BGSDetector detector(30,
                           BGS_HW,
@@ -126,55 +134,47 @@ int main(int argc, char *argv[]) {
                           false);
 
     /***************************** Begin looping here *********************/
+//    auto begin = std::chrono::high_resolution_clock::now();
     bool isFirst = true;
-
     Mat img, grey;
 
-
     for (;;){
+        // Queue the buffer
+        //auto begin = std::chrono::high_resolution_clock::now();
 
         backsub_config(isFirst);
         if(isFirst) isFirst = false;
-        auto begin = std::chrono::high_resolution_clock::now();
-        cap>>img;
-        auto begin2 = std::chrono::high_resolution_clock::now();
 
-        if(!img.data) break;
-        
+    auto begin = std::chrono::high_resolution_clock::now();
+    cap>>img;
+    auto begin2 = std::chrono::high_resolution_clock::now();
+    if(!img.data) break;
         cv::cvtColor(img, grey, CV_BGR2GRAY);
         memcpy(rgb_src,img.data,76800*3);
         memcpy(src,grey.data,76800);
-
+        //auto begin2 = std::chrono::high_resolution_clock::now();
 
         XBgsub_Start(&backsub);
         while(!XBgsub_IsDone(&backsub));
 
         auto end2 = std::chrono::high_resolution_clock::now();
-
         Mat mask = Mat(240, 320, CV_8UC1); 
         memcpy(mask.data,dst,76800);
 
         std::vector<cv::Rect> detections = detector.detect(mask);
-
-        int len = detections.size();
-
-        if (len>10){
-            len = 10;
-        }
-
-        printf("detections : %d\n",len);
-                 
-        auto end3 = std::chrono::high_resolution_clock::now();
-        
-        auto end4 = std::chrono::high_resolution_clock::now();
-
+            int len = detections.size();
+            if (len>10){
+                len = 10;
+            }
+            printf("detections: %d\n",len);
+            int det =0;
+             
 
         Frame frame;
         frame.frameNo = frameNo;
         frame.cameraID = cameraID;
         frame.detections.clear();
         frame.histograms.clear();
-
         for(int q=0;q<len;q++)
         {
             BoundingBox bbox;
@@ -189,17 +189,18 @@ int main(int argc, char *argv[]) {
         frameNo++;
         frame.setMask(detector.mask);
         frame.set_now();
+        auto end4 = std::chrono::high_resolution_clock::now();
         client.send(frame);
 
         auto end = std::chrono::high_resolution_clock::now();
 
-        printf("Elapsed time capture : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(begin2-begin).count());
-        printf("Elapsed time backsub : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end2-begin2).count());
-        printf("Elapsed time opencv  : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end3-end2).count());
-        printf("Elapsed time feature : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end4-end3).count());
-        printf("Elapsed time send    : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end-end4).count());
-        printf("Elapsed time total   : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count());
-    }
+    printf("Elapsed time capture : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(begin2-begin).count());
+    printf("Elapsed time backsub : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end2-begin2).count());
+    printf("Elapsed time opencv  : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end3-end2).count());
+    printf("Elapsed time send    : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end-end4).count());
+    printf("Elapsed time total   : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count());
+    
+}
 
 
     //Release IP Core
@@ -207,7 +208,6 @@ int main(int argc, char *argv[]) {
 
     munmap((void*)src, DDR_RANGE);
     munmap((void*)dst, DDR_RANGE);
-    munmap((void*)rgb_src, DDR_RANGE);
 
     close(fdIP);
      
