@@ -12,11 +12,11 @@
 #include "detection/BGSDetector.h"
 #include <csignal>
 
-#define RGB_TX_BASE_ADDR  0x30000000
-#define MASK_BASE_ADDR    0x30100000
-#define TX_BASE_ADDR      0x31000000
-#define RX_BASE_ADDR      0x31800000
-#define BG_MODEL          0x33000000
+#define RGB_TX_BASE_ADDR  0x10000000
+#define MASK_BASE_ADDR    0x10100000
+#define TX_BASE_ADDR      0x11000000
+#define RX_BASE_ADDR      0x11800000
+#define BG_MODEL          0x13000000
 #define DDR_RANGE         0x00800000
 
 #define AXILITES_BASEADDR 0x43C00000
