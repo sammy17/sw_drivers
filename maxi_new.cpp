@@ -161,6 +161,8 @@ int main(int argc, char *argv[]) {
         if (len>10){
             len = 10;
         }
+
+        printf("detections : %d\n",len);
                  
         auto end3 = std::chrono::high_resolution_clock::now();
         
@@ -181,8 +183,6 @@ int main(int argc, char *argv[]) {
             bbox.width = detections[q].width;
             bbox.height = detections[q].height;
             frame.detections.push_back(bbox);
-
-            vector<uint16_t> histogram(512);
       
             frame.histograms.push_back(detector.histograms[q]);
         }
