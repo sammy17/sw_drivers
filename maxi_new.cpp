@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
             if (len>10){
                 len = 10;
             }
-            printf("detections: %d\n",len);
+            // printf("detections: %d\n",len);
             int det =0;
              
 

@@ -83,7 +83,7 @@ std::vector<cv::Rect> BGSDetector::detect(cv::Mat &img)
         cv::convexHull(contours[i], convexHulls[i]);
     }
 
-    printf("Covex size : %d\n",convexHulls.size());
+    // printf("Covex size : %d\n",convexHulls.size());
     for (auto &convexHull : convexHulls)
     {
         Blob possibleBlob(convexHull);
