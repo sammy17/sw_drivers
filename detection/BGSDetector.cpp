@@ -88,9 +88,9 @@ std::vector<cv::Rect> BGSDetector::detect(cv::Mat &img)
     {
         Blob possibleBlob(convexHull);
 
-        float record[8] = {
-                (float)possibleBlob.currentBoundingRect.x,
-                (float)possibleBlob.currentBoundingRect.y,
+        float record[N_FEATURES] = {
+                // (float)possibleBlob.currentBoundingRect.x,
+                // (float)possibleBlob.currentBoundingRect.y,
                 (float)possibleBlob.currentBoundingRect.width,
                 (float)possibleBlob.currentBoundingRect.height,
                 (float)possibleBlob.currentBoundingRect.area(),
@@ -104,14 +104,14 @@ std::vector<cv::Rect> BGSDetector::detect(cv::Mat &img)
         //     if(method!=BGS_HW || (method==BGS_HW && count>=FRAME_WAIT))
         //     {
                 DetectionRecord dr;
-                memcpy(dr.data,record,8* sizeof(float));
+                memcpy(dr.data,record,N_FEATURES* sizeof(float));
                 data.push_back(dr);
                 found.push_back(possibleBlob.currentBoundingRect);
             // }
         }
         else
         {
-            Mat x1(1,8,CV_32F,record);
+            Mat x1(1,N_FEATURES,CV_32F,record);
             Mat d = x1 * coeffMat.t();
             if(d.at<float>(0)>detectorTH)
                 found.push_back(possibleBlob.currentBoundingRect);

@@ -107,12 +107,15 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    VideoCapture cap(argv[1]);
+    VideoCapture cap(0);
     cap.set(CV_CAP_PROP_FRAME_WIDTH,320);
     cap.set(CV_CAP_PROP_FRAME_HEIGHT,240);
     cap.set(CV_CAP_PROP_FPS,30);
     cap.set(CV_CAP_PROP_CONVERT_RGB,true);
-   // cap.set(CV_CAP_PROP_AUTOFOCUS, 0);
+    cap.set(CV_CAP_PROP_AUTOFOCUS, 0);
+    cap.set(CV_CAP_PROP_FOCUS,0);
+
+    for(int i=0;i<120;i++) cap.grab();
 
     src = (uint8_t*)mmap(NULL, DDR_RANGE,PROT_READ|PROT_WRITE, MAP_SHARED, fdIP, TX_BASE_ADDR); 
     dst = (uint8_t*)mmap(NULL, DDR_RANGE,PROT_EXEC|PROT_READ|PROT_WRITE, MAP_SHARED, fdIP, RX_BASE_ADDR);
@@ -136,7 +139,7 @@ int main(int argc, char *argv[]) {
     /***************************** Begin looping here *********************/
 //    auto begin = std::chrono::high_resolution_clock::now();
     bool isFirst = true;
-    Mat img, grey;
+    Mat img, gray;
 
     for (;;){
         // Queue the buffer
@@ -149,8 +152,11 @@ int main(int argc, char *argv[]) {
     cap>>img;
     auto begin2 = std::chrono::high_resolution_clock::now();
     if(!img.data) break;
-        cv::cvtColor(img, grey, CV_BGR2GRAY);
-        memcpy(src,grey.data,76800);
+        cv::cvtColor(img, gray, CV_BGR2GRAY);
+        auto begin_blur = std::chrono::high_resolution_clock::now();
+        blur(gray,gray,Size(3,3));
+        auto end_blur = std::chrono::high_resolution_clock::now();
+        memcpy(src,gray.data,76800);
         //auto begin2 = std::chrono::high_resolution_clock::now();
 
         XBgsub_Start(&backsub);
@@ -199,6 +205,7 @@ int main(int argc, char *argv[]) {
     printf("Elapsed time opencv  : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end3-end2).count());
     printf("Elapsed time send    : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end-end4).count());
     printf("Elapsed time total   : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count());
+    printf("Elapsed time gaussian blur : %lld us\n",std::chrono::duration_cast<std::chrono::microseconds>(end_blur-begin_blur).count());
     
 }
 

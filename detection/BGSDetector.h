@@ -15,6 +15,8 @@
 
 #define FRAME_WAIT 300
 
+#define N_FEATURES 6
+
 class Blob
 {
 public:
