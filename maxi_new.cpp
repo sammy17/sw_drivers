@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
     boost::asio::io_service io_service;
     ClientUDP client(io_service,argv[2],8080);
     uint16_t frameNo=0;
-    const uint8_t cameraID = 1;
+    const uint8_t cameraID = (uint8_t)stoi(argv[4]);
 
     // Initializing IP Core Starts here .........................
     fdIP = open ("/dev/mem", O_RDWR);
