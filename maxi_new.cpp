@@ -90,15 +90,18 @@ void signalHandler( int signum ) {
     exit(signum);
 }
 
+#define IMG_H 240
+#define IMG_W 320 
+
 
 int main(int argc, char *argv[]) {
     signal(SIGINT, signalHandler);
 
     // Initialization communication link
     boost::asio::io_service io_service;
-    ClientUDP client(io_service,"10.10.21.49",8080);
+    ClientUDP client(io_service,argv[2],8080);
     uint16_t frameNo=0;
-    const uint8_t cameraID = 0;
+    const uint8_t cameraID = 1;
 
     // Initializing IP Core Starts here .........................
     fdIP = open ("/dev/mem", O_RDWR);
@@ -113,8 +116,8 @@ int main(int argc, char *argv[]) {
     else
         cap.open(argv[1]);
 
-    cap.set(CV_CAP_PROP_FRAME_WIDTH,320);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT,240);
+    cap.set(CV_CAP_PROP_FRAME_WIDTH,IMG_W);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT,IMG_H);
     cap.set(CV_CAP_PROP_FPS,30);
     cap.set(CV_CAP_PROP_CONVERT_RGB,true);
     cap.set(CV_CAP_PROP_AUTOFOCUS, 0);
@@ -161,15 +164,15 @@ int main(int argc, char *argv[]) {
         auto begin_blur = std::chrono::high_resolution_clock::now();
         blur(gray,gray,Size(3,3));
         auto end_blur = std::chrono::high_resolution_clock::now();
-        memcpy(src,gray.data,76800);
+        memcpy(src,gray.data,IMG_H*IMG_W);
         //auto begin2 = std::chrono::high_resolution_clock::now();
 
         XBgsub_Start(&backsub);
         while(!XBgsub_IsDone(&backsub));
 
         auto end2 = std::chrono::high_resolution_clock::now();
-        Mat mask = Mat(240, 320, CV_8UC1); 
-        memcpy(mask.data,dst,76800);
+        Mat mask = Mat(IMG_H, IMG_W, CV_8UC1); 
+        memcpy(mask.data,dst,IMG_H*IMG_W);
 
         std::vector<cv::Rect> detections = detector.detect(mask);
             int len = detections.size();
