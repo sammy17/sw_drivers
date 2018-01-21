@@ -123,7 +123,9 @@ int main(int argc, char *argv[]) {
     cap.set(CV_CAP_PROP_AUTOFOCUS, 0);
     cap.set(CV_CAP_PROP_FOCUS,0);
 
-    for(int i=0;i<120;i++) cap.grab();
+    int WAIT = stoi(argv[3])
+
+    for(int i=0;i<WAIT;i++) cap.grab();
 
     src = (uint8_t*)mmap(NULL, DDR_RANGE,PROT_READ|PROT_WRITE, MAP_SHARED, fdIP, TX_BASE_ADDR); 
     dst = (uint8_t*)mmap(NULL, DDR_RANGE,PROT_EXEC|PROT_READ|PROT_WRITE, MAP_SHARED, fdIP, RX_BASE_ADDR);
