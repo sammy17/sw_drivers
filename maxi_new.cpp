@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     cap.set(CV_CAP_PROP_AUTOFOCUS, 0);
     cap.set(CV_CAP_PROP_FOCUS,0);
 
-    int WAIT = stoi(argv[3])
+    int WAIT = stoi(argv[3]);
 
     for(int i=0;i<WAIT;i++) cap.grab();
 
